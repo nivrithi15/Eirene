@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Your postpartum recovery timeline with an AI-powered Cloudinary image transformation assistant.">
+  <title>Eirene</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Background Ambient Glows -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="app-container">
+    <!-- LEFT SIDEBAR: Controls & Insights -->
+    <aside class="control-panel">
+      <div class="brand">
+        <div class="logo-wrapper">
+          <span class="logo-icon"><i class="fa-solid fa-seedling"></i></span>
+        </div>
+        <div>
+          <h1>Eirene</h1>
+          <p class="subtitle">She matters too</p>
+        </div>
+      </div>
+
+      <!-- Insights & SVG Chart Card -->
+      <div class="card insights-card">
+        <div class="card-header">
+          <h3><i class="fa-solid fa-chart-line"></i> Your Progress</h3>
+        </div>
+        <div class="insights-grid">
+          <div class="insight-stat">
+            <span class="stat-value" id="mood-improvement">+0%</span>
+            <span class="stat-label">Mood Board</span>
+          </div>
+          <div class="insight-stat">
+            <span class="stat-value" id="total-milestones">0</span>
+            <span class="stat-label">Milestones</span>
+          </div>
+        </div>
+        
+        <!-- SVG Mood Chart -->
+        <div class="chart-wrapper">
+          <svg id="mood-chart" viewBox="0 0 300 120" preserveAspectRatio="none">
+            <!-- Fallback background lines -->
+            <line x1="0" y1="20" x2="300" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+            <line x1="0" y1="60" x2="300" y2="60" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+            <line x1="0" y1="100" x2="300" y2="100" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+            <path id="chart-path" d="" fill="none" stroke="var(--accent-color)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            <path id="chart-area" d="" fill="url(#chart-gradient)" opacity="0.15" />
+            <g id="chart-points"></g>
+            
+            <defs>
+              <linearGradient id="chart-gradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--accent-color)" />
+                <stop offset="100%" stop-color="transparent" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="chart-empty-state" id="chart-empty">Add milestones to see trend</div>
+        </div>
+      </div>
+
+      <!-- Form Control -->
+      <div class="card form-card">
+        <h3><i class="fa-solid fa-pen-nib"></i> Log a New Milestone</h3>
+        <form id="memory-form">
+          <input type="hidden" id="edit-id" value="">
+          
+          <div class="form-group">
+            <label for="week-select">Timeline Milestone</label>
+            <select id="week-select" required>
+              <option value="Week 1">Week 1</option>
+              <option value="Week 2">Week 2</option>
+              <option value="Week 3">Week 3</option>
+              <option value="Week 4">Week 4</option>
+              <option value="Week 5">Week 5</option>
+              <option value="Week 6">Week 6</option>
+              <option value="Week 7">Week 7</option>
+              <option value="Week 8">Week 8</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>How are you feeling? (1-10)</label>
+            <input type="hidden" id="mood-input" value="5">
+            <div class="mood-selector-container" id="mood-buttons-container">
+              <!-- Dynamically populated 1-10 buttons -->
+            </div>
+            <div class="mood-feedback">
+              <span id="mood-emoji">😐</span>
+              <span id="mood-val">5</span>/10 &mdash; <span id="mood-label">Neutral</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="journal-input">Reflection / Note</label>
+            <textarea id="journal-input" rows="3" placeholder="How was your week? What felt different? Share your wins, struggles, or moments of peace." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="file-upload-btn" for="image-input">
+              <i class="fa-solid fa-camera"></i> Upload a Photo
+            </label>
+            <input type="file" id="image-input" accept="image/*" class="visually-hidden">
+            
+            <!-- Image Preview Box -->
+            <div class="image-preview-wrapper hidden" id="preview-wrapper">
+              <img id="image-preview" src="" alt="Preview">
+              <button type="button" class="btn-remove-preview" id="btn-clear-image" title="Remove image">
+                <i class="fa-solid fa-times"></i>
+              </button>
+            </div>
+            <div id="file-chosen">No file chosen</div>
+
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-submit" id="submit-btn">Add to Timeline</button>
+            <button type="button" class="btn-cancel hidden" id="cancel-edit-btn">Cancel Edit</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Cloudinary Settings (Collapsible) -->
+      <div class="card settings-card" id="settings-card">
+        <div class="settings-header" id="settings-toggle">
+          <h3><i class="fa-solid fa-cloud-arrow-up"></i> Cloudinary Credentials</h3>
+          <span class="toggle-icon"><i class="fa-solid fa-chevron-down"></i></span>
+        </div>
+        <div class="settings-content" id="settings-content">
+          <p class="settings-info">Configure your custom Cloudinary credentials. If left empty or invalid, the app compresses and saves photos locally.</p>
+          <div class="form-group">
+            <label for="dmvuzwlxs">Cloud Name</label>
+            <input type="text" id="dmvuzwlxs">
+          </div>
+          <div class="form-group">
+            <label for="eirene">Upload Preset</label>
+            <input type="text" id="eirene">
+          </div>
+          <button type="button" class="btn-secondary" id="save-settings-btn">Save Credentials</button>
+          <div id="settings-status" class="settings-status">Using local sandbox fallback.</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN TIMELINE TRACK -->
+    <main class="timeline-container">
+      <div class="affirmation-card" id="affirmation-card" aria-live="polite">
+        <div class="affirmation-card__icon" aria-hidden="true">
+          <i class="fa-solid fa-spa"></i>
+        </div>
+        <div class="affirmation-card__content">
+          <div class="affirmation-card__eyebrow">Today's Affirmation</div>
+          <p class="affirmation-text" id="affirmation-text">Loading your gentle reminder…</p>
+          <div class="affirmation-card__meta">
+            <span class="affirmation-date" id="affirmation-date"></span>
+          </div>
+        </div>
+      </div>
+
+      <header class="timeline-header">
+        <h2>Your Healing Journey</h2>
+        <p>A visual timeline documenting your postpartum recovery, strengths, and moments of peace. Add, filter, or review your milestones.</p>
+      </header>
+
+      <!-- Filter and Sort Controls -->
+      <div class="timeline-controls">
+        <div class="filter-group">
+          <button class="filter-btn active" data-filter="all">All Entries</button>
+          <button class="filter-btn" data-filter="low"><span class="color-dot low"></span> Terracotta (1-4)</button>
+          <button class="filter-btn" data-filter="mid"><span class="color-dot mid"></span> Amber (5-7)</button>
+          <button class="filter-btn" data-filter="high"><span class="color-dot high"></span> Sage (8-10)</button>
+        </div>
+        <div class="sort-group">
+          <button class="sort-btn" id="sort-btn">
+            <span>Oldest First</span> <i class="fa-solid fa-arrow-down-short-wide"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Timeline Scroll Track Wrapper -->
+      <div class="timeline-wrapper">
+        <div class="timeline-track" id="timeline-track">
+          <!-- Javascript renders cards directly here -->
+        </div>
+      </div>
+
+      <section class="milestones-section" aria-labelledby="milestones-heading">
+        <div class="section-heading">
+          <div>
+            <h3 id="milestones-heading">Recovery Milestones</h3>
+            <p>Gentle reminders of progress, care, and strength.</p>
+          </div>
+        </div>
+
+        <div class="recovery-milestones-summary">
+          <div class="recovery-milestones-summary__header">
+            <div>
+              <h4>Automatic Recovery Milestones</h4>
+              <p>Every gentle step forward is celebrated here.</p>
+            </div>
+            <div class="recovery-milestones-summary__stats">
+              <span id="recovery-milestones-count">0 / 10</span>
+              <span id="recovery-milestones-percent">0%</span>
+            </div>
+          </div>
+          <div class="recovery-milestones-progress" aria-label="Recovery milestone progress">
+            <div class="recovery-milestones-progress__fill" id="recovery-milestones-progress-fill"></div>
+          </div>
+          <div class="recovery-milestones-grid" id="recovery-milestones-grid"></div>
+        </div>
+
+        <div class="milestones-layout">
+          <form class="card milestone-form" id="milestone-form">
+            <div class="milestone-form__header">
+              <h4>Add a milestone</h4>
+              <p>Capture a small win or a meaningful moment.</p>
+            </div>
+
+            <input type="hidden" id="milestone-edit-id" value="">
+
+            <div class="form-group">
+              <label for="milestone-title">Milestone title</label>
+              <input type="text" id="milestone-title" placeholder="Example: First walk outside" required>
+            </div>
+
+            <div class="form-group">
+              <label for="milestone-date">Completion date</label>
+              <input type="date" id="milestone-date">
+            </div>
+
+            <div class="form-group">
+              <label for="milestone-notes">Optional notes</label>
+              <textarea id="milestone-notes" rows="3" placeholder="What made this moment special?"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="milestone-photo">Optional recovery photo</label>
+              <input type="file" id="milestone-photo" accept="image/*">
+              <div class="milestone-photo-preview hidden" id="milestone-photo-preview"></div>
+            </div>
+
+            <div class="milestone-form__actions">
+              <button type="submit" class="btn-submit milestone-submit" id="milestone-submit-btn">Add milestone</button>
+              <button type="button" class="btn-cancel hidden" id="cancel-milestone-edit-btn">Cancel</button>
+            </div>
+          </form>
+
+          <div class="milestones-panel">
+            <div class="milestone-suggestions">
+              <span class="milestone-suggestions__label">Suggestions</span>
+              <div class="milestone-suggestion-list" id="milestone-suggestions"></div>
+            </div>
+            <div class="milestones-list" id="milestones-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="milestone-modal hidden" id="milestone-modal" role="dialog" aria-modal="true" aria-label="Milestone achieved">
+    <div class="milestone-modal__card">
+      <div class="milestone-modal__confetti" aria-hidden="true">
+        <span class="confetti confetti-1">✦</span>
+        <span class="confetti confetti-2">✦</span>
+        <span class="confetti confetti-3">✦</span>
+        <span class="confetti confetti-4">✦</span>
+        <span class="confetti confetti-5">♡</span>
+        <span class="confetti confetti-6">♡</span>
+      </div>
+      <div class="milestone-modal__icon">💙</div>
+      <h3>Milestone Unlocked!</h3>
+      <p class="milestone-modal__lead">🎉 Recovery milestone unlocked</p>
+      <p class="milestone-modal__body"><strong id="celebration-milestone-name"></strong></p>
+      <p class="milestone-modal__body milestone-modal__body--secondary" id="celebration-milestone-description"></p>
+      <p class="milestone-modal__footer">Every step forward is worth celebrating. Keep going. You are doing amazing. 💙</p>
+      <div class="milestone-modal__actions">
+        <button type="button" class="milestone-modal__btn" id="continue-milestone-btn">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Agent Drawer (For supporting low moods) -->
+  <div class="ai-drawer" id="ai-drawer">
+    <div class="ai-drawer-header">
+      <div class="ai-drawer-title">
+        <span class="ai-icon"><i class="fa-solid fa-robot"></i></span>
+        <div>
+          <h4>Eirene AI Companion</h4>
+          <span class="ai-status"><span class="status-dot"></span> Online</span>
+        </div>
+      </div>
+      <button class="btn-close-drawer" id="btn-close-drawer" title="Close Companion">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    
+    <div class="ai-messages" id="ai-messages">
+      <!-- Chat history goes here -->
+    </div>
+    
+    <div class="ai-quick-replies" id="ai-quick-replies">
+      <button class="quick-reply-btn" data-reply="Give me a plan to improve my diet or health">Health & Diet Plan</button>
+      <button class="quick-reply-btn" data-reply="Why is my Cloudinary upload failing?">Cloudinary Upload Help</button>
+      <button class="quick-reply-btn" data-reply="Guide me through a breathing exercise">Breathing Exercise</button>
+    </div>
+    
+    <form class="ai-input-form" id="ai-input-form">
+      <input type="text" id="ai-chat-input" placeholder="Ask Eirene AI anything..." autocomplete="off">
+      <button type="submit" class="btn-send-chat" title="Send message">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </form>
+  </div>
+
+  <!-- Floating trigger button (visible when a low mood is detected or active) -->
+  <button class="ai-floating-trigger hidden" id="ai-floating-trigger" title="Open AI Companion">
+    <span class="pulse-ring"></span>
+    <i class="fa-solid fa-heart-pulse"></i>
+  </button>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- Cloudinary AI Transformation Assistant              -->
+  <!-- ═══════════════════════════════════════════════════ -->
+
+  <!-- Modal Overlay -->
+  <div class="cld-ai-overlay" id="cld-ai-overlay" role="dialog" aria-modal="true" aria-label="Cloudinary AI Transformation Assistant">
+    <div class="cld-ai-modal" id="cld-ai-modal">
+
+      <!-- Modal Header -->
+      <div class="cld-ai-modal-header">
+        <div class="cld-ai-modal-title">
+          <div class="cld-ai-modal-icon">
+            <i class="fa-solid fa-cloud"></i>
+            <i class="fa-solid fa-wand-magic-sparkles cld-ai-modal-icon-sparkle"></i>
+          </div>
+          <div>
+            <h2>Cloudinary AI Assistant</h2>
+            <p>Describe any image transformation in plain language</p>
+          </div>
+        </div>
+        <button class="cld-ai-close" id="cld-ai-close" title="Close" aria-label="Close assistant">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="cld-ai-modal-body">
+
+        <!-- Example chips -->
+        <div class="cld-ai-examples">
+          <span class="cld-ai-examples-label"><i class="fa-solid fa-lightbulb"></i> Try:</span>
+          <button class="cld-chip" data-prompt="Make the picture more soft and dreamy">Soft &amp; dreamy</button>
+          <button class="cld-chip" data-prompt="Create a brighter, warmer picture">Brighter &amp; warmer</button>
+          <button class="cld-chip" data-prompt="Resize this to a 400x400 square thumbnail">Square thumbnail</button>
+          <button class="cld-chip" data-prompt="Optimize for dark mode with a dark tint overlay">Dark mode</button>
+          <button class="cld-chip" data-prompt="Remove the background and keep it transparent">Remove BG</button>
+          <button class="cld-chip" data-prompt="Convert to black and white">Black &amp; white</button>
+          <button class="cld-chip" data-prompt="Add 20px rounded corners">Rounded corners</button>
+          <button class="cld-chip" data-prompt="Sharpen and enhance clarity">Sharpen</button>
+          <button class="cld-chip" data-prompt="Add a warm sepia vintage tone">Vintage sepia</button>
+          <button class="cld-chip" data-prompt="Make the image face-centered and crop to portrait">Face portrait</button>
+        </div>
+
+        <!-- Prompt input row -->
+        <div class="cld-ai-input-row">
+          <div class="cld-ai-input-wrapper">
+            <i class="fa-solid fa-comment-dots cld-ai-input-icon"></i>
+            <textarea
+              id="cld-ai-prompt"
+              class="cld-ai-textarea"
+              rows="2"
+              placeholder='Describe what you want… e.g. "Make the image warmer and a bit blurred"'
+              aria-label="Transformation prompt"
+            ></textarea>
+          </div>
+          <button class="cld-ai-generate-btn" id="cld-ai-generate-btn" aria-label="Generate transformation">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Generate</span>
+          </button>
+        </div>
+
+        <!-- Loading state -->
+        <div class="cld-ai-loading hidden" id="cld-ai-loading" aria-live="polite">
+          <div class="cld-ai-spinner"></div>
+          <span>Analysing your request…</span>
+        </div>
+
+        <!-- Results Panel (hidden until first generation) -->
+        <div class="cld-ai-results hidden" id="cld-ai-results">
+
+          <!-- Transformation Summary -->
+          <div class="cld-ai-section">
+            <div class="cld-ai-section-header">
+              <span class="cld-ai-section-icon cld-icon-summary"><i class="fa-solid fa-list-check"></i></span>
+              <h3>Transformation Summary</h3>
+            </div>
+            <div class="cld-ai-summary-tags" id="cld-ai-summary-tags"></div>
+            <p class="cld-ai-summary-text" id="cld-ai-summary-text"></p>
+          </div>
+
+          <!-- Generated URL -->
+          <div class="cld-ai-section">
+            <div class="cld-ai-section-header">
+              <span class="cld-ai-section-icon cld-icon-url"><i class="fa-solid fa-link"></i></span>
+              <h3>Generated URL</h3>
+            </div>
+            <div class="cld-ai-url-box">
+              <code class="cld-ai-url-code" id="cld-ai-url-code"></code>
+              <button class="cld-ai-copy-btn" id="cld-ai-copy-btn" title="Copy URL" aria-label="Copy transformation URL">
+                <i class="fa-regular fa-copy"></i>
+                <span id="cld-ai-copy-label">Copy</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Transformation String -->
+          <div class="cld-ai-section">
+            <div class="cld-ai-section-header">
+              <span class="cld-ai-section-icon cld-icon-code"><i class="fa-solid fa-code"></i></span>
+              <h3>Transformation String</h3>
+            </div>
+            <div class="cld-ai-trans-box">
+              <code class="cld-ai-trans-code" id="cld-ai-trans-code"></code>
+              <button class="cld-ai-copy-btn" id="cld-ai-copy-trans-btn" title="Copy transformation string" aria-label="Copy transformation string">
+                <i class="fa-regular fa-copy"></i>
+                <span id="cld-ai-copy-trans-label">Copy</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <div class="cld-ai-section">
+            <div class="cld-ai-section-header">
+              <span class="cld-ai-section-icon cld-icon-preview"><i class="fa-regular fa-image"></i></span>
+              <h3>Preview</h3>
+              <span class="cld-ai-preview-note" id="cld-ai-preview-note"></span>
+            </div>
+            <div class="cld-ai-preview-wrap">
+              <div class="cld-ai-preview-loader hidden" id="cld-ai-preview-loader">
+                <div class="cld-ai-spinner"></div>
+                <span>Loading preview…</span>
+              </div>
+              <img
+                class="cld-ai-preview-img hidden"
+                id="cld-ai-preview-img"
+                src=""
+                alt="Transformed image preview"
+              />
+              <div class="cld-ai-preview-error hidden" id="cld-ai-preview-error">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Preview unavailable — provide a valid Cloud Name &amp; Public ID above to see a live preview.</span>
+              </div>
+              <div class="cld-ai-preview-placeholder" id="cld-ai-preview-placeholder">
+                <i class="fa-regular fa-image"></i>
+                <p>Enter your Cloud Name &amp; Public ID to see a live preview.</p>
+              </div>
+            </div>
+            <!-- Open in new tab -->
+            <a class="cld-ai-open-link hidden" id="cld-ai-open-link" href="#" target="_blank" rel="noopener noreferrer">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Open full-size in new tab
+            </a>
+          </div>
+
+          <!-- Cost notice for AI transformations -->
+          <div class="cld-ai-cost-notice hidden" id="cld-ai-cost-notice">
+            <i class="fa-solid fa-circle-info"></i>
+            <span id="cld-ai-cost-text"></span>
+          </div>
+
+          <div class="cld-ai-action-row hidden" id="cld-ai-action-row">
+            <button class="cld-ai-btn cld-ai-accept-btn" id="cld-ai-accept-btn">Use Transformed Photo</button>
+            <button class="cld-ai-btn cld-ai-reject-btn" id="cld-ai-reject-btn">Reject</button>
+            <a class="cld-ai-download-link hidden" id="cld-ai-download-link" href="#" download="eirene-transformed.jpg">
+              <i class="fa-solid fa-download"></i> Download Photo
+            </a>
+          </div>
+
+        </div><!-- /results -->
+      </div><!-- /body -->
+    </div><!-- /modal -->
+  </div><!-- /overlay -->
+
+  <script src="script.js"></script>
+</body>
+</html>
